@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness Math</title>
+  <style>
+    /* ── DESIGN TOKENS ───────────────────────────────────────────────── */
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    #2a2d3a;
+      --text:      #e2e4ed;
+      --muted:     #6b7280;
+      --accent:    #6c8ef5;
+      --green:     #4ade80;
+      --red:       #f87171;
+      --radius:    12px;
+      --gap:       1.5rem;
+    }
+
+    /* ── RESET & BASE ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── PAGE LAYOUT ─────────────────────────────────────────────────── */
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+    }
+
+    header {
+      text-align: center;
+      padding-bottom: 0.5rem;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    /* ── CARDS ───────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+
+    .card-number {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    /* ── FORM FIELDS ─────────────────────────────────────────────────── */
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input[type="number"],
+    select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 0.55rem 0.75rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+
+    /* ── OUTPUT BOX ──────────────────────────────────────────────────── */
+    .output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem 1.5rem;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-value.warn { color: var(--red); }
+    .stat-value.neutral { color: var(--accent); }
+
+    .stat-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── FORMULA BOX ─────────────────────────────────────────────────── */
+    .formula {
+      background: #12151e;
+      border-left: 3px solid var(--border);
+      border-radius: 0 6px 6px 0;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: "Menlo", "Consolas", monospace;
+      line-height: 1.8;
+    }
+
+    .formula strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── FLOW ARROW ──────────────────────────────────────────────────── */
+    .flow-arrow {
+      text-align: center;
+      color: var(--border);
+      font-size: 1.2rem;
+      margin: -0.5rem 0;
+    }
+
+    /* ── CONNECTED BADGE ─────────────────────────────────────────────── */
+    .connected-badge {
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: rgba(108, 142, 245, 0.12);
+      border: 1px solid rgba(108, 142, 245, 0.25);
+      border-radius: 4px;
+      padding: 0.1rem 0.45rem;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Fitness Math</h1>
+    <p>All outputs update live as you type. Calculators are connected top → bottom.</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CARD 1 — BODY COMPOSITION
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="card" id="card-bc">
+    <div class="card-header">
+      <div class="card-number">1</div>
+      <h2>Body Composition</h2>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="bc-weight">Weight (lbs)</label>
+        <input type="number" id="bc-weight" value="185" min="50" max="500" step="0.5">
+      </div>
+      <div class="field">
+        <label for="bc-bf">Body Fat %</label>
+        <input type="number" id="bc-bf" value="18" min="3" max="60" step="0.5">
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="stat">
+        <span class="stat-label">Lean Mass</span>
+        <span class="stat-value" id="bc-lean">—</span>
+        <span class="stat-sub">lbs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Fat Mass</span>
+        <span class="stat-value neutral" id="bc-fat">—</span>
+        <span class="stat-sub">lbs</span>
+      </div>
+    </div>
+
+    <div class="formula">
+      <strong>Lean Mass</strong> = weight × (1 − bf%)<br>
+      <strong>Fat Mass</strong>  = weight × bf%
+    </div>
+  </section>
+
+  <div class="flow-arrow">↓ lean mass feeds into TDEE</div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CARD 2 — TDEE
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="card" id="card-tdee">
+    <div class="card-header">
+      <div class="card-number">2</div>
+      <h2>TDEE (Katch-McArdle)</h2>
+      <span class="connected-badge">← uses lean mass</span>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="tdee-lean">Lean Mass (lbs) <span style="color:var(--accent)">auto</span></label>
+        <input type="number" id="tdee-lean" value="151.7" min="50" max="400" step="0.1" readonly style="opacity:0.6;cursor:not-allowed">
+      </div>
+      <div class="field">
+        <label for="tdee-activity">Activity Level</label>
+        <select id="tdee-activity">
+          <option value="1.2">Sedentary (desk job, no exercise)</option>
+          <option value="1.375">Light (1–3 days/week)</option>
+          <option value="1.55" selected>Moderate (3–5 days/week)</option>
+          <option value="1.725">Very Active (6–7 days/week)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="stat">
+        <span class="stat-label">BMR</span>
+        <span class="stat-value neutral" id="tdee-bmr">—</span>
+        <span class="stat-sub">kcal / day (at rest)</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">TDEE (Maintenance)</span>
+        <span class="stat-value" id="tdee-out">—</span>
+        <span class="stat-sub">kcal / day</span>
+      </div>
+    </div>
+
+    <div class="formula">
+      <strong>BMR</strong>  = 370 + (21.6 × lean_kg)<br>
+      <strong>TDEE</strong> = BMR × activity_multiplier<br>
+      <span style="color:#4b5563">lean_kg = lean_lbs ÷ 2.205</span>
+    </div>
+  </section>
+
+  <div class="flow-arrow">↓ TDEE feeds into macros and cut projection</div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CARD 3 — MACRO SPLIT
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="card" id="card-macro">
+    <div class="card-header">
+      <div class="card-number">3</div>
+      <h2>Macro Split</h2>
+      <span class="connected-badge">← uses TDEE &amp; lean mass</span>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="mac-cals">Target Calories <span style="color:var(--accent)">auto</span></label>
+        <input type="number" id="mac-cals" value="2500" min="800" max="6000" step="10" readonly style="opacity:0.6;cursor:not-allowed">
+      </div>
+      <div class="field">
+        <label for="mac-protein">Protein (g / lb lean)</label>
+        <input type="number" id="mac-protein" value="1.0" min="0.5" max="2.0" step="0.05">
+      </div>
+      <div class="field">
+        <label for="mac-fatpct">Fat (% of calories)</label>
+        <input type="number" id="mac-fatpct" value="25" min="15" max="50" step="1">
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="stat">
+        <span class="stat-label">Protein</span>
+        <span class="stat-value" id="mac-protein-out">—</span>
+        <span class="stat-sub" id="mac-protein-kcal">— kcal</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Fat</span>
+        <span class="stat-value neutral" id="mac-fat-out">—</span>
+        <span class="stat-sub" id="mac-fat-kcal">— kcal</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Carbs</span>
+        <span class="stat-value" id="mac-carb-out">—</span>
+        <span class="stat-sub" id="mac-carb-kcal">— kcal</span>
+      </div>
+    </div>
+
+    <div class="formula">
+      <strong>Protein</strong> = lean_lbs × protein_per_lb  (4 kcal/g)<br>
+      <strong>Fat</strong>     = target_cals × fat% ÷ 9      (9 kcal/g)<br>
+      <strong>Carbs</strong>   = remaining calories ÷ 4       (4 kcal/g)
+    </div>
+  </section>
+
+  <div class="flow-arrow">↓ TDEE feeds cut projection</div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CARD 4 — CUT PROJECTION
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="card" id="card-cut">
+    <div class="card-header">
+      <div class="card-number">4</div>
+      <h2>Cut Projection</h2>
+      <span class="connected-badge">← uses TDEE</span>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="cut-current">Current Weight (lbs)</label>
+        <input type="number" id="cut-current" value="185" min="80" max="500" step="0.5">
+      </div>
+      <div class="field">
+        <label for="cut-target">Target Weight (lbs)</label>
+        <input type="number" id="cut-target" value="170" min="80" max="500" step="0.5">
+      </div>
+      <div class="field">
+        <label for="cut-rate">Cut Rate (lbs / week)</label>
+        <input type="number" id="cut-rate" value="1.0" min="0.25" max="2.5" step="0.25">
+      </div>
+      <div class="field">
+        <label for="cut-tdee">Your TDEE <span style="color:var(--accent)">auto</span></label>
+        <input type="number" id="cut-tdee" value="2500" min="1000" max="6000" step="10" readonly style="opacity:0.6;cursor:not-allowed">
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="stat">
+        <span class="stat-label">Weeks to Goal</span>
+        <span class="stat-value neutral" id="cut-weeks">—</span>
+        <span class="stat-sub">weeks</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Estimated End Date</span>
+        <span class="stat-value neutral" id="cut-date" style="font-size:1rem">—</span>
+        <span class="stat-sub">calendar date</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Daily Deficit</span>
+        <span class="stat-value warn" id="cut-deficit">—</span>
+        <span class="stat-sub">kcal below TDEE</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Target Daily Intake</span>
+        <span class="stat-value" id="cut-intake">—</span>
+        <span class="stat-sub">kcal / day to eat</span>
+      </div>
+    </div>
+
+    <div class="formula">
+      <strong>Weeks</strong>        = (current − target) ÷ rate<br>
+      <strong>Daily deficit</strong> = rate × 3500 ÷ 7  (1 lb fat ≈ 3500 kcal)<br>
+      <strong>Target intake</strong> = TDEE − daily_deficit<br>
+      <strong>End date</strong>      = today + weeks
+    </div>
+  </section>
+
+  <footer>Fitness Math — formulas shown above each result. Not medical advice.</footer>
+
+</div>
+
+<script>
+  // ── HELPERS ──────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const num = id => parseFloat($(id).value) || 0;
+
+  function fmt(n, decimals = 0) {
+    if (!isFinite(n) || isNaN(n)) return '—';
+    return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function addWeeks(date, weeks) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + Math.round(weeks * 7));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // ── CALCULATORS ───────────────────────────────────────────────────────
+
+  function calcBodyComp(weightLbs, bfPct) {
+    const bf = bfPct / 100;
+    return {
+      leanLbs: weightLbs * (1 - bf),
+      fatLbs:  weightLbs * bf,
+    };
+  }
+
+  function calcTDEE(leanLbs, activityMultiplier) {
+    const leanKg = leanLbs / 2.205;
+    const bmr    = 370 + (21.6 * leanKg);
+    return {
+      bmr,
+      tdee: bmr * activityMultiplier,
+    };
+  }
+
+  function calcMacros(targetCals, leanLbs, proteinPerLb, fatPct) {
+    const proteinG  = leanLbs * proteinPerLb;
+    const proteinKcal = proteinG * 4;
+    const fatKcal   = targetCals * (fatPct / 100);
+    const fatG      = fatKcal / 9;
+    const carbKcal  = targetCals - proteinKcal - fatKcal;
+    const carbG     = carbKcal / 4;
+    return { proteinG, fatG, carbG, proteinKcal, fatKcal, carbKcal };
+  }
+
+  function calcCut(currentLbs, targetLbs, ratePerWeek, tdee) {
+    const lbsToLose   = currentLbs - targetLbs;
+    const weeks        = lbsToLose / ratePerWeek;
+    const dailyDeficit = (ratePerWeek * 3500) / 7;
+    const targetIntake = tdee - dailyDeficit;
+    const endDate      = addWeeks(new Date(), weeks);
+    return { weeks, dailyDeficit, targetIntake, endDate };
+  }
+
+  // ── MASTER UPDATE ─────────────────────────────────────────────────────
+  function update() {
+    // 1. Body Composition
+    const weight = num('bc-weight');
+    const bf     = num('bc-bf');
+    const bc     = calcBodyComp(weight, bf);
+
+    $('bc-lean').textContent = fmt(bc.leanLbs, 1);
+    $('bc-fat').textContent  = fmt(bc.fatLbs, 1);
+
+    // Feed lean mass down
+    $('tdee-lean').value = bc.leanLbs.toFixed(1);
+
+    // 2. TDEE
+    const activity = parseFloat($('tdee-activity').value);
+    const tdeeData = calcTDEE(bc.leanLbs, activity);
+
+    $('tdee-bmr').textContent = fmt(tdeeData.bmr);
+    $('tdee-out').textContent  = fmt(tdeeData.tdee);
+
+    // Feed TDEE down
+    $('mac-cals').value  = Math.round(tdeeData.tdee);
+    $('cut-tdee').value  = Math.round(tdeeData.tdee);
+
+    // 3. Macros
+    const proteinPerLb = num('mac-protein');
+    const fatPct       = num('mac-fatpct');
+    const macros       = calcMacros(tdeeData.tdee, bc.leanLbs, proteinPerLb, fatPct);
+
+    $('mac-protein-out').textContent  = fmt(macros.proteinG) + 'g';
+    $('mac-fat-out').textContent      = fmt(macros.fatG) + 'g';
+    $('mac-carb-out').textContent     = fmt(macros.carbG) + 'g';
+    $('mac-protein-kcal').textContent = fmt(macros.proteinKcal) + ' kcal';
+    $('mac-fat-kcal').textContent     = fmt(macros.fatKcal) + ' kcal';
+    $('mac-carb-kcal').textContent    = fmt(macros.carbKcal) + ' kcal';
+
+    // warn if carbs go negative (protein+fat exceeds target)
+    $('mac-carb-out').classList.toggle('warn', macros.carbG < 0);
+
+    // 4. Cut Projection
+    const currentW  = num('cut-current');
+    const targetW   = num('cut-target');
+    const rate      = num('cut-rate');
+    const cut       = calcCut(currentW, targetW, rate, tdeeData.tdee);
+
+    const validCut  = currentW > targetW && rate > 0;
+    $('cut-weeks').textContent   = validCut ? fmt(cut.weeks, 1)  : '—';
+    $('cut-date').textContent    = validCut ? cut.endDate         : '—';
+    $('cut-deficit').textContent = validCut ? fmt(cut.dailyDeficit) : '—';
+    $('cut-intake').textContent  = validCut ? fmt(cut.targetIntake) : '—';
+
+    // warn if intake is dangerously low
+    $('cut-intake').classList.toggle('warn', validCut && cut.targetIntake < 1200);
+  }
+
+  // ── WIRE UP INPUTS ────────────────────────────────────────────────────
+  const liveInputs = [
+    'bc-weight', 'bc-bf',
+    'tdee-activity',
+    'mac-protein', 'mac-fatpct',
+    'cut-current', 'cut-target', 'cut-rate',
+  ];
+
+  liveInputs.forEach(id => $(id).addEventListener('input', update));
+
+  // Run once on load so outputs appear immediately
+  update();
+</script>
+</body>
+</html>
