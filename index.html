@@ -241,7 +241,7 @@
     <div class="fields">
       <div class="field">
         <label for="bc-weight">Weight (lbs)</label>
-        <input type="number" id="bc-weight" value="185" min="50" max="500" step="0.5">
+        <input type="number" id="bc-weight" value="155" min="50" max="500" step="0.5">
       </div>
       <div class="field">
         <label for="bc-bf">Body Fat %</label>
@@ -383,7 +383,7 @@
     <div class="fields">
       <div class="field">
         <label for="cut-current">Current Weight (lbs)</label>
-        <input type="number" id="cut-current" value="185" min="80" max="500" step="0.5">
+        <input type="number" id="cut-current" value="155" min="80" max="500" step="0.5">
       </div>
       <div class="field">
         <label for="cut-target">Target Weight (lbs)</label>
@@ -445,7 +445,7 @@
     <div class="fields">
       <div class="field">
         <label for="water-weight">Weight (lbs) <span style="color:var(--accent)">auto</span></label>
-        <input type="number" id="water-weight" value="185" min="50" max="500" step="0.5" readonly style="opacity:0.6;cursor:not-allowed">
+        <input type="number" id="water-weight" value="155" min="50" max="500" step="0.5" readonly style="opacity:0.6;cursor:not-allowed">
       </div>
       <div class="field">
         <label for="water-activity">Activity Level <span style="color:var(--accent)">auto</span></label>
@@ -519,12 +519,12 @@
   }
 
   function calcMacros(targetCals, leanLbs, proteinPerLb, fatPct) {
-    const proteinG  = leanLbs * proteinPerLb;
+    const proteinG    = leanLbs * proteinPerLb;
     const proteinKcal = proteinG * 4;
-    const fatKcal   = targetCals * (fatPct / 100);
-    const fatG      = fatKcal / 9;
-    const carbKcal  = targetCals - proteinKcal - fatKcal;
-    const carbG     = carbKcal / 4;
+    const fatKcal     = targetCals * (fatPct / 100);
+    const fatG        = fatKcal / 9;
+    const carbKcal    = targetCals - proteinKcal - fatKcal;
+    const carbG       = carbKcal / 4;
     return { proteinG, fatG, carbG, proteinKcal, fatKcal, carbKcal };
   }
 
@@ -601,10 +601,10 @@
     // 5. Water Intake
     const activityLabels = { 1.2: 'Sedentary', 1.375: 'Light', 1.55: 'Moderate', 1.725: 'Very Active' };
     const water = calcWater(weight, activity);
-    $('water-weight').value   = weight;
-    $('water-activity').value = activityLabels[activity] || 'Moderate';
-    $('water-oz').textContent    = fmt(water.oz, 1);
-    $('water-cups').textContent  = fmt(water.cups, 1);
+    $('water-weight').value    = weight;
+    $('water-activity').value  = activityLabels[activity] || 'Moderate';
+    $('water-oz').textContent     = fmt(water.oz, 1);
+    $('water-cups').textContent   = fmt(water.cups, 1);
     $('water-liters').textContent = fmt(water.liters, 2);
   }
 
