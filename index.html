@@ -430,6 +430,55 @@
     </div>
   </section>
 
+  <div class="flow-arrow">↓ weight &amp; activity feed water intake</div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CARD 5 — WATER INTAKE
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="card" id="card-water">
+    <div class="card-header">
+      <div class="card-number">5</div>
+      <h2>Water Intake</h2>
+      <span class="connected-badge">← uses weight &amp; activity</span>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label for="water-weight">Weight (lbs) <span style="color:var(--accent)">auto</span></label>
+        <input type="number" id="water-weight" value="185" min="50" max="500" step="0.5" readonly style="opacity:0.6;cursor:not-allowed">
+      </div>
+      <div class="field">
+        <label for="water-activity">Activity Level <span style="color:var(--accent)">auto</span></label>
+        <input type="text" id="water-activity" value="Moderate" readonly style="opacity:0.6;cursor:not-allowed;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.95rem;padding:0.55rem 0.75rem;width:100%">
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="stat">
+        <span class="stat-label">Ounces / Day</span>
+        <span class="stat-value" id="water-oz">—</span>
+        <span class="stat-sub">fl oz</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Cups / Day</span>
+        <span class="stat-value neutral" id="water-cups">—</span>
+        <span class="stat-sub">8 fl oz cups</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Liters / Day</span>
+        <span class="stat-value neutral" id="water-liters">—</span>
+        <span class="stat-sub">liters</span>
+      </div>
+    </div>
+
+    <div class="formula">
+      <strong>Base</strong>    = weight_lbs × 0.5  (oz/day)<br>
+      <strong>Adjusted</strong> = base × activity_factor<br>
+      <span style="color:#4b5563">Sedentary ×1.0 · Light ×1.1 · Moderate ×1.2 · Very Active ×1.35</span><br>
+      <strong>Cups</strong>    = oz ÷ 8  ·  <strong>Liters</strong> = oz × 0.0296
+    </div>
+  </section>
+
   <footer>Fitness Math — formulas shown above each result. Not medical advice.</footer>
 
 </div>
@@ -477,6 +526,13 @@
     const carbKcal  = targetCals - proteinKcal - fatKcal;
     const carbG     = carbKcal / 4;
     return { proteinG, fatG, carbG, proteinKcal, fatKcal, carbKcal };
+  }
+
+  function calcWater(weightLbs, activityMultiplier) {
+    const activityFactor = { 1.2: 1.0, 1.375: 1.1, 1.55: 1.2, 1.725: 1.35 };
+    const factor = activityFactor[activityMultiplier] || 1.0;
+    const oz = weightLbs * 0.5 * factor;
+    return { oz, cups: oz / 8, liters: oz * 0.0296 };
   }
 
   function calcCut(currentLbs, targetLbs, ratePerWeek, tdee) {
@@ -541,6 +597,15 @@
 
     // warn if intake is dangerously low
     $('cut-intake').classList.toggle('warn', validCut && cut.targetIntake < 1200);
+
+    // 5. Water Intake
+    const activityLabels = { 1.2: 'Sedentary', 1.375: 'Light', 1.55: 'Moderate', 1.725: 'Very Active' };
+    const water = calcWater(weight, activity);
+    $('water-weight').value   = weight;
+    $('water-activity').value = activityLabels[activity] || 'Moderate';
+    $('water-oz').textContent    = fmt(water.oz, 1);
+    $('water-cups').textContent  = fmt(water.cups, 1);
+    $('water-liters').textContent = fmt(water.liters, 2);
   }
 
   // ── WIRE UP INPUTS ────────────────────────────────────────────────────
